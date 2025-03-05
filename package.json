@@ -1,0 +1,44 @@
+{
+  "name": "randomdex-eth",
+  "version": "1.0.0",
+  "description": "RandomDEX Ethereum Implementation",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:goerli": "hardhat run scripts/deploy.js --network goerli",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "deploy:mainnet": "hardhat run scripts/deploy.js --network mainnet",
+    "verify:sepolia": "hardhat verify --network sepolia"
+  },
+  "keywords": [
+    "ethereum",
+    "smart-contract",
+    "erc20",
+    "token"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@openzeppelin/contracts": "^5.0.1",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0",
+    "dotenv": "^16.3.1",
+    "jest": "^29.7.0"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.12",
+    "@typechain/ethers-v6": "^0.5.0",
+    "@typechain/hardhat": "^9.0.0",
+    "chai": "^4.2.0",
+    "ethers": "^6.4.0",
+    "hardhat": "^2.22.18",
+    "hardhat-gas-reporter": "^1.0.8",
+    "solidity-coverage": "^0.8.0",
+    "typechain": "^8.3.0"
+  }
+}
