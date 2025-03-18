@@ -155,7 +155,8 @@ contract RandomDEX is
         uniswapRouter = IUniswapV2Router02(UNISWAP_V2_ROUTER);
         WETH = uniswapRouter.WETH();
         listingTimestamp = listingTimestamp_;
-
+        
+        _grantRole(DEFAULT_ADMIN_ROLE, address(this)); 
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin_);
         emit ListingTimestampUpdated(listingTimestamp_);
 
@@ -321,5 +322,4 @@ contract RandomDEX is
         emit FeeSwappedToETH(rdxAmount, ethAmountExpected, feeCollector);
     }
 
-    receive() external payable {}
 }
