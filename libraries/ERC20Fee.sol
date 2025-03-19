@@ -28,9 +28,6 @@ abstract contract ERC20Fee is ERC20, AccessControl {
     /// @notice Emitted when the fee transfer numerator is updated.
     /// @param fees The new fee transfer numerators.
     event FeesUpdated(Fees fees);
-    /// @notice Emitted when the antibot fee transfer numerator is updated.
-    /// @param antiBotFees The new antibot fee transfer numerators.
-    event AntiBotFeesUpdated(Fees antiBotFees);
     /// @notice Emitted when the fee collector address is updated.
     /// @param feeCollector The new fee collector address.
     event FeeCollectorUpdated(address feeCollector);
@@ -45,18 +42,14 @@ abstract contract ERC20Fee is ERC20, AccessControl {
     error AfterAntibotEndTimestamp();
     /// @notice The error message when the fee numerator is bigger than the maximum numerator.
     error CannotBeBiggerThanMaximumNumerator();
+    /// @notice The error message when the antibot fee numerator is bigger than or equal to the denominator.
+    error CannotBeBiggerThanOrEqualToDenominator();
     /// @notice Modifier to check if the fee numerator is in the valid range.
     /// Numerator must be less than denominator.
     /// Numerators must be less than or equal maximumNumerator.
     /// @param fees_ The fee transfer numerators.
     modifier validateFee(Fees memory fees_) {
         if (fees_.buy > maximumNumerator || fees_.sell > maximumNumerator) {
-            revert CannotBeBiggerThanMaximumNumerator();
-        }
-        _;
-    }
-    modifier validateAntiBotFees(Fees memory antiBotFees_) {
-        if (antiBotFees_.buy > maximumNumerator || antiBotFees_.sell > maximumNumerator) {
             revert CannotBeBiggerThanMaximumNumerator();
         }
         _;
@@ -83,8 +76,9 @@ abstract contract ERC20Fee is ERC20, AccessControl {
         if (fees_.buy > maximumNumerator_ || fees_.sell > maximumNumerator_) {
             revert CannotBeBiggerThanMaximumNumerator();
         }
-        if (antiBotFees_.buy > maximumNumerator_ || antiBotFees_.sell > maximumNumerator_) {
-            revert CannotBeBiggerThanMaximumNumerator();
+        // Ensure antibot fees don't exceed denominator to prevent underflow
+        if (antiBotFees_.buy >= denominator_ || antiBotFees_.sell >= denominator_) {
+            revert CannotBeBiggerThanOrEqualToDenominator();
         }
         if (antibotEndTimestamp_ < block.timestamp) revert UnacceptableValue();
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin_);
@@ -104,13 +98,6 @@ abstract contract ERC20Fee is ERC20, AccessControl {
     function updateFees(Fees memory fees_) external onlyRole(DEFAULT_ADMIN_ROLE) validateFee(fees_) {
         fees = fees_;
         emit FeesUpdated(fees_);
-    }
-    /// @notice Update the antibot fee transfer numerators.
-    /// It changes the configuration, so it must be called by an account with the appropriate permissions (`DEFAULT_ADMIN_ROLE` role).
-    /// @param antiBotFees_ The new antibot fee transfer numerators.
-    function updateAntiBotFees(Fees memory antiBotFees_) external onlyRole(DEFAULT_ADMIN_ROLE) validateAntiBotFees(antiBotFees_) {
-        antiBotFees = antiBotFees_;
-        emit AntiBotFeesUpdated(antiBotFees_);
     }
     /// @notice Update the fee collector address.
     /// It changes the configuration, so it must be called by an account with the appropriate permissions (`DEFAULT_ADMIN_ROLE` role).
