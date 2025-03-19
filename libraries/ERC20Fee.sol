@@ -42,6 +42,8 @@ abstract contract ERC20Fee is ERC20, AccessControl {
     error AfterAntibotEndTimestamp();
     /// @notice The error message when the fee numerator is bigger than the maximum numerator.
     error CannotBeBiggerThanMaximumNumerator();
+    /// @notice The error message when the antibot fee numerator is bigger than or equal to the denominator.
+    error CannotBeBiggerThanOrEqualToDenominator();
     /// @notice Modifier to check if the fee numerator is in the valid range.
     /// Numerator must be less than denominator.
     /// Numerators must be less than or equal maximumNumerator.
@@ -73,6 +75,10 @@ abstract contract ERC20Fee is ERC20, AccessControl {
         if (maximumNumerator_ >= denominator_) revert UnacceptableValue();
         if (fees_.buy > maximumNumerator_ || fees_.sell > maximumNumerator_) {
             revert CannotBeBiggerThanMaximumNumerator();
+        }
+        // Ensure antibot fees don't exceed denominator to prevent underflow
+        if (antiBotFees_.buy >= denominator_ || antiBotFees_.sell >= denominator_) {
+            revert CannotBeBiggerThanOrEqualToDenominator();
         }
         if (antibotEndTimestamp_ < block.timestamp) revert UnacceptableValue();
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin_);
