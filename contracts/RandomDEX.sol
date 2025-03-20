@@ -53,7 +53,12 @@ contract RandomDEX is
      * @dev Timestamp after which all transfers are allowed.
      */
     uint256 public listingTimestamp;
-
+    
+    /**
+     * @dev Slippage tolerance for swaps (in basis points, 100 = 1%).
+     */
+    uint256 public slippageTolerance = 100;
+    
     /**
      * @dev Emitted when new tokens are minted.
      */
@@ -74,7 +79,7 @@ contract RandomDEX is
      */
     event FeeSwappedToETH(
         uint256 rdxAmount,
-        uint256 ethAmount,
+        uint256 ethAmountExpected,
         address receiver
     );
 
@@ -95,7 +100,13 @@ contract RandomDEX is
     /**
      * @dev Emitted when RDX fees are claimed in ETH.
      */
-    event FeeClaimedInETH(uint256 ethAmount, address receiver);
+    event FeeClaimedInETH(uint256 ethAmountExpected, address receiver);
+    
+    /**
+     * @dev Emitted when slippage tolerance is updated.
+     */
+    event SlippageToleranceUpdated(uint256 newSlippageTolerance);
+    
     /**
      * @dev Emitted when listing timestamp is updated.
      */
@@ -145,6 +156,7 @@ contract RandomDEX is
         WETH = uniswapRouter.WETH();
         listingTimestamp = listingTimestamp_;
 
+        _grantRole(DEFAULT_ADMIN_ROLE, address(this)); 
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin_);
         emit ListingTimestampUpdated(listingTimestamp_);
 
@@ -165,6 +177,16 @@ contract RandomDEX is
         listingTimestamp = timestamp;
         emit ListingTimestampUpdated(timestamp);
     }
+    /**
+     * @dev Updates the slippage tolerance for swaps.
+     * @param _slippageTolerance New slippage tolerance (in basis points, 100 = 1%)
+     */
+    function updateSlippageTolerance(uint256 _slippageTolerance) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (_slippageTolerance > 5000) revert SlippageToleranceTooHigh();
+        slippageTolerance = _slippageTolerance;
+        emit SlippageToleranceUpdated(_slippageTolerance);
+    }
+
     /**
      * @dev Mints new tokens to a specified address. Restricted to MINT_ROLE holders.
      * @param to The recipient address.
@@ -198,8 +220,8 @@ contract RandomDEX is
         uint256 rdxBalance = balanceOf(address(this));
         if (rdxBalance == 0) revert InsufficientClaimAmount();
 
-        uint256 ethAmount = _swapRDXForETH(rdxBalance);
-        emit FeeClaimedInETH(ethAmount, feeCollector);
+        uint256 ethAmountExpected = _swapRDXForETH(rdxBalance);
+        emit FeeClaimedInETH(ethAmountExpected, feeCollector);
     }
 
     /**
@@ -220,6 +242,14 @@ contract RandomDEX is
         return super.balanceOf(address(this));
     }
 
+    /**
+     * @dev Overrides the ERC-20 transferFrom function to add additional checks.
+     *      Restricted to DEFAULT_ADMIN_ROLE holders.
+     * @param sender The address of the sender.
+     * @param recipient The address of the recipient.
+     * @param amount The amount of tokens to transfer.
+     * @return bool True if the transfer is successful.
+     */
     function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
        if (block.timestamp < listingTimestamp) {
             // Check if sender is authorized
@@ -236,8 +266,7 @@ contract RandomDEX is
         // If we get here, either we're past listing time or sender is authorized
         return super.transferFrom(sender, recipient, amount);
     }
-
-     /**
+    /**
      * @dev Handles token transfers, applies transfer fees when necessary, and stores fees in the contract.
      *      Overrides the ERC-20 `_update` function to integrate fee deductions.
      * @param from The sender address.
@@ -266,29 +295,30 @@ contract RandomDEX is
      * @dev Swaps RDX tokens for ETH using Uniswap and sends the ETH to the fee collector.
      *      Ensures that ETH is successfully received before completing the transaction.
      * @param rdxAmount The amount of RDX tokens to swap.
-     * @return ethAmount The amount of ETH received from the swap.
+     * @return ethAmountExpected The amount of ETH expected from the swap.
      */
     function _swapRDXForETH(
         uint256 rdxAmount
-    ) internal returns (uint256 ethAmount) {
+    ) internal returns (uint256 ethAmountExpected) {
         if (rdxAmount == 0) revert InsufficientSwapAmount();
 
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = WETH;
         _approve(address(this), UNISWAP_V2_ROUTER, rdxAmount);
-        ethAmount = uniswapRouter.getAmountsOut(rdxAmount, path)[1];
-        if (ethAmount == 0) revert SwapFailed();
+
+        ethAmountExpected = uniswapRouter.getAmountsOut(rdxAmount, path)[1];
+        if (ethAmountExpected == 0) revert SwapFailed();
+        
+        // Calculate minimum ETH amount based on slippage tolerance (using 10000 as denominator)
+        uint256 minEthAmount = ethAmountExpected * (10000 - slippageTolerance) / 10000;
         uniswapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
             rdxAmount,
-            0,
+            minEthAmount,
             path,
             feeCollector,
             block.timestamp + 300
         );
-
-        emit FeeSwappedToETH(rdxAmount, ethAmount, feeCollector);
+        emit FeeSwappedToETH(rdxAmount, ethAmountExpected, feeCollector);
     }
-
-    receive() external payable {}
 }
