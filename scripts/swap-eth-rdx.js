@@ -7,7 +7,7 @@ async function main() {
 
   // ✅ Uniswap V2 Router & Token Addresses (Sepolia Testnet)
   const UNISWAP_ROUTER = "0xeE567Fe1712Faf6149d80dA1E6934E354124CfE3";
-  const RDX_TOKEN = "0xbf6763ae2eF02578FfFbBE91A830382279f1b425";
+  const RDX_TOKEN = "0xAdC3f836b60Cea62204bdf05bdaa4f998441A2C8";
   const WETH_ADDRESS = "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14";
 
   // ✅ Bind the Uniswap Router to secondAccount

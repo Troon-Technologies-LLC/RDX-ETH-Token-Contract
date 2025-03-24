@@ -29,7 +29,11 @@ const ethRandomDEXTokenAddress = process.env.ETH_RANDOMDEX_CONTRACT_ADDRESS;
 const interchainTokenFactoryContractAddress = process.env.INTERCHAIN_FACTORY_CONTRACT_ADDRESS;
 
 // Initialize Axelar APIs
-const api = new AxelarQueryAPI({ environment: Environment.TESTNET });
+const api = new AxelarQueryAPI({ environment: Environment.MAINNET });
+
+// Chain names for Axelar Mainnet
+const BASE_CHAIN_NAME = "base"; // Base chain name on Axelar mainnet
+const ETHEREUM_CHAIN_NAME = "Ethereum"; // Ethereum chain name on Axelar mainnet
 
 // Utility to create a signer instance
 async function getSigner(rpcUrl, privateKey) {
@@ -53,8 +57,8 @@ async function gasEstimatorForEth(amount) {
     };
 
     const gas = await api.estimateGasFee(
-      EvmChain.SEPOLIA,
-      EvmChain.BASE_SEPOLIA,
+      EvmChain.ETHEREUM,
+      EvmChain.BASE,
       3000000,  // Increased gas limit
       1.3,      // Increased multiplier for better estimation
       GasToken.ETH,
@@ -74,7 +78,7 @@ async function gasEstimatorForEth(amount) {
 // Register token metadata for Base blockchain
 async function registerTokenMetadataOnBase() {
   try{
-    const signer = await getSigner(process.env.BASE_SEPOLIA_RPC_URL, process.env.PRIVATE_KEY);
+    const signer = await getSigner(process.env.BASE_MAINNET_RPC_URL, process.env.PRIVATE_KEY);
     const interchainTokenServiceContract = await getContractInstance(
       interchainTokenServiceContractAddress,
       interchainTokenServiceContractABI,
@@ -102,7 +106,7 @@ async function registerTokenMetadataOnBase() {
 }
 // Register token metadata for Ethereum blockchain
 async function registerTokenMetadataOnEth() {
-  try{const signer = await getSigner(process.env.SEPOLIA_RPC_URL, process.env.PRIVATE_KEY);
+  try{const signer = await getSigner(process.env.ETH_MAINNET_RPC_URL, process.env.PRIVATE_KEY);
     const interchainTokenServiceContract = await getContractInstance(
       interchainTokenServiceContractAddress,
       interchainTokenServiceContractABI,
@@ -132,7 +136,7 @@ async function registerCustomTokenOnBase() {
   // Generate random salt
   const salt = "0x" + crypto.randomBytes(32).toString("hex");
   // Get a signer to sign the transaction
-  const signer = await getSigner(process.env.BASE_SEPOLIA_RPC_URL, process.env.PRIVATE_KEY);
+  const signer = await getSigner(process.env.BASE_MAINNET_RPC_URL, process.env.PRIVATE_KEY);
  
   // Get the interchainTokenFactory contract instance
   const interchainTokenFactoryContract = await getContractInstance(
@@ -156,7 +160,7 @@ async function registerCustomTokenOnBase() {
 }
 async function linkCustomToken() {
   // Get a signer to sign the transaction
-  const signer = await getSigner(process.env.BASE_SEPOLIA_RPC_URL, process.env.PRIVATE_KEY);
+  const signer = await getSigner(process.env.BASE_MAINNET_RPC_URL, process.env.PRIVATE_KEY);
   // Get the interchainTokenFactory contract instance
   const interchainTokenFactoryContract = await getContractInstance(
     interchainTokenFactoryContractAddress,
@@ -167,7 +171,7 @@ async function linkCustomToken() {
   // Register token metadata
   const deployTxData = await interchainTokenFactoryContract.linkToken(
     process.env.TOKEN_SALT, // salt, same as previously used
-    "ethereum-sepolia", // destination chain
+    ETHEREUM_CHAIN_NAME, // destination chain on mainnet 
     ethRandomDEXTokenAddress, // destination token address
     MINT_BURN, // token manager type
     signer.address, // Address who has deployed the rdx token contract 
@@ -179,7 +183,7 @@ async function linkCustomToken() {
 }
 async function getTokenManagerAddress() {
   // Get a signer to sign the transaction
-  const signer = await getSigner(process.env.BASE_SEPOLIA_RPC_URL, process.env.PRIVATE_KEY);
+  const signer = await getSigner(process.env.BASE_MAINNET_RPC_URL, process.env.PRIVATE_KEY);
 
   // Get the interchainTokenFactory contract instance
   const interchainTokenFactoryContract = await getContractInstance(
@@ -210,7 +214,7 @@ async function getTokenManagerAddress() {
 // Transfer mint access on all chains to the Expected Token Manager : BSC
 async function transferMintAccessToTokenManagerOnEth() {
   try {
-    const signer = await getSigner(process.env.SEPOLIA_RPC_URL, process.env.PRIVATE_KEY);
+    const signer = await getSigner(process.env.ETH_MAINNET_RPC_URL, process.env.PRIVATE_KEY);
 
     const tokenContract = await getContractInstance(
       ethRandomDEXTokenAddress,
@@ -238,7 +242,7 @@ async function transferMintAccessToTokenManagerOnEth() {
 }
 async function approveTokensOnBase() {
   try {
-    const signer = await getSigner(process.env.BASE_SEPOLIA_RPC_URL, process.env.PRIVATE_KEY);
+    const signer = await getSigner(process.env.BASE_MAINNET_RPC_URL, process.env.PRIVATE_KEY);
 
     const tokenContract = await getContractInstance(
       baseRandomDEXTokenAddress,
@@ -248,7 +252,7 @@ async function approveTokensOnBase() {
 
     const approveTx = await tokenContract.approve(
       interchainTokenServiceContractAddress,
-      ethers.parseEther("500")
+      ethers.parseEther("20000000")
     );
     console.log("Approve Transaction Hash:", approveTx.hash);
   } catch (error) {
@@ -258,7 +262,7 @@ async function approveTokensOnBase() {
 // Transfer tokens from Base to Ethereum
 async function transferTokensBaseToEth() {
   try {
-    const signer = await getSigner(process.env.BASE_SEPOLIA_RPC_URL, process.env.PRIVATE_KEY);
+    const signer = await getSigner(process.env.BASE_MAINNET_RPC_URL, process.env.PRIVATE_KEY);
 
     const interchainTokenServiceContract = await getContractInstance(
       interchainTokenServiceContractAddress,
@@ -266,14 +270,14 @@ async function transferTokensBaseToEth() {
       signer
     );
 
-    const gasAmount = await gasEstimatorForEth("10");
+    const gasAmount = await gasEstimatorForEth("20000000");
     console.log(`Gas amount: ${gasAmount}`);
 
     const transferTx = await interchainTokenServiceContract.interchainTransfer(
       process.env.TOKEN_ID,
-      "ethereum-sepolia",
-      process.env.ETHEREUM_RECEIVER_ADDRESS,
-      ethers.parseEther("10"),
+      ETHEREUM_CHAIN_NAME,
+      process.env.CLIENT_ADDRESS,
+      ethers.parseEther("20000000"),
       "0x",
       gasAmount,
       { value: gasAmount }
@@ -286,7 +290,7 @@ async function transferTokensBaseToEth() {
 }
 async function approveTokensOnEth() {
   try {
-    const signer = await getSigner(process.env.SEPOLIA_RPC_URL, process.env.PRIVATE_KEYY);
+    const signer = await getSigner(process.env.ETH_MAINNET_RPC_URL, process.env.PRIVATE_KEYY);
 
     const tokenContract = await getContractInstance(
       ethRandomDEXTokenAddress,
@@ -296,7 +300,7 @@ async function approveTokensOnEth() {
 
     const approveTx = await tokenContract.approve(
       interchainTokenServiceContractAddress,
-      ethers.parseEther("500")
+      ethers.parseEther("10")
     );
     console.log("Approve Transaction Hash:", approveTx.hash);
   } catch (error) {
@@ -306,23 +310,23 @@ async function approveTokensOnEth() {
 // Transfer tokens from Ethereum to Base
 async function transferTokensEthToBase() {
   try {
-    const signer = await getSigner(process.env.SEPOLIA_RPC_URL, process.env.PRIVATE_KEYY);
+    const signer = await getSigner(process.env.ETH_MAINNET_RPC_URL, process.env.PRIVATE_KEYY);
     const interchainTokenServiceContract = await getContractInstance(
       interchainTokenServiceContractAddress,
       interchainTokenServiceContractABI,
       signer
     );
 
-    const gasAmount = await gasEstimatorForEth("10");
+    const gasAmount = await gasEstimatorForEth("5");
     console.log(`Gas amount: ${gasAmount}`);
     
     const metadata = "0x";
 
     const transferTx = await interchainTokenServiceContract.interchainTransfer(
       process.env.TOKEN_ID,
-      "base-sepolia",
-      process.env.ETHEREUM_RECEIVER_ADDRESS,
-      ethers.parseEther("10"),
+      BASE_CHAIN_NAME,
+      process.env.BASE_RECEIVER_ADDRESS,
+      ethers.parseEther("5"),
       metadata,
       gasAmount,
       { value: gasAmount }

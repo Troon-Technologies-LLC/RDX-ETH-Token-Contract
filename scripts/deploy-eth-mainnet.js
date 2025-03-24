@@ -7,7 +7,7 @@ async function main() {
   // Constructor parameters
   const defaultAdmin = deployer.address;
   const feeCollector = "0x5eee3BbE01f2f765305dF7A8647EB4d06a38f703"; // Client Fee collector address
-  const feeMaximumNumerator = 300; // 3% maximum fee
+  const feeMaximumNumerator = 500; // 5% maximum fee
   const feeDenominator = 10000; // Denominator for fee calculation
   const fees = {
     buy: 300,  // 3% buy fee
@@ -17,10 +17,10 @@ async function main() {
     buy: 2500,  // 25% antibot buy fee
     sell: 2500  // 25% antibot sell fee
   };
-  const antibotEndTimestamp = Math.floor(Date.now() / 1000) + 1200; // 20 minutes from now
+  const antibotEndTimestamp = Math.floor(Date.now() / 1000) + 60; // 1 minute from now
   const uniswapRouter = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"; // Uniswap V2 Router for Mainnet
-  // Todo
-  const listingTimestamp = Math.floor(Date.now() / 1000) + 7200; // 2 hours from now Will change it to 1 day 
+  // 1 week from now
+  const listingTimestamp = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60);
 
   // Explicitly specify the contract from RandomDEX.sol
   const RandomDEX = await ethers.getContractFactory("contracts/RandomDEX.sol:RandomDEX");

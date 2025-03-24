@@ -7,7 +7,7 @@ async function main() {
 
   // Uniswap V2 Router & Token Addresses (Sepolia Testnet)
   const UNISWAP_ROUTER = "0xeE567Fe1712Faf6149d80dA1E6934E354124CfE3";
-  const RDX_TOKEN = "0xbf6763ae2eF02578FfFbBE91A830382279f1b425";
+  const RDX_TOKEN = "0xAdC3f836b60Cea62204bdf05bdaa4f998441A2C8";
   const WETH_ADDRESS = "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14";
 
   // Contract instances
@@ -15,7 +15,7 @@ async function main() {
   const rdxToken = await ethers.getContractAt("IERC20", RDX_TOKEN, secondAccount);
 
   // Swap parameters
-  const amountIn = ethers.parseUnits("5", 18); // 5 RDX
+  const amountIn = ethers.parseUnits("100", 18); // 100 RDX
   const amountOutMin = 0; // Accept any ETH
   const path = [RDX_TOKEN, WETH_ADDRESS];
   const deadline = Math.floor(Date.now() / 1000) + 60 * 10; // 10 minutes
