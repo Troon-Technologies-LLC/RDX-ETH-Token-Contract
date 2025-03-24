@@ -18,6 +18,11 @@ module.exports = {
     localhost: {
       url: "http://127.0.0.1:8545"
     },
+    mainnet: {
+      url: process.env.ETH_MAINNET_RPC_URL,
+      accounts: [process.env.PRIVATE_KEY, process.env.PRIVATE_KEYY],
+      chainId: 1,
+    },
     sepolia: {
       url: SEPOLIA_RPC_URL,
       accounts: [PRIVATE_KEY, PRIVATE_KEYY].filter(key => key !== "0x0000000000000000000000000000000000000000000000000000000000000000"),
@@ -36,6 +41,7 @@ module.exports = {
   },
   etherscan: {
     apiKey: {
+      mainnet: ETHERSCAN_API_KEY,
       sepolia: ETHERSCAN_API_KEY, // Ethereum Sepolia
       base: BASESCAN_API_KEY,      // Base Mainnet
       baseSepolia: BASESCAN_API_KEY, // Base Sepolia (same key as Base Mainnet)

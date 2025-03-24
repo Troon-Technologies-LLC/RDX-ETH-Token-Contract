@@ -18,12 +18,9 @@ async function main() {
     sell: 2500  // 25% antibot sell fee
   };
   const antibotEndTimestamp = Math.floor(Date.now() / 1000) + 1200; // 20 minutes from now
-  const uniswapRouter = "0xeE567Fe1712Faf6149d80dA1E6934E354124CfE3"; // Uniswap V2 Router for Sepolia Testnet
-  // Todo
-  const listingTimestamp = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now Will change it to 1 day 
-
-  // Explicitly specify the contract from RandomDEXV6.sol
-  const RandomDEX = await ethers.getContractFactory("RandomDEX");
+  
+  // Explicitly specify the contract from RandomDEX.sol
+  const RandomDEX = await ethers.getContractFactory("contracts/RandomDEXB.sol:RandomDEX");
   const randomDEX = await RandomDEX.deploy(
     defaultAdmin,
     feeCollector,
@@ -31,9 +28,7 @@ async function main() {
     feeDenominator,
     fees,
     antiBotFees,
-    antibotEndTimestamp,
-    uniswapRouter,
-    listingTimestamp
+    antibotEndTimestamp
     );
 
   await randomDEX.waitForDeployment();
@@ -56,9 +51,7 @@ async function main() {
         feeDenominator,
         fees,
         antiBotFees,  
-        antibotEndTimestamp,
-        uniswapRouter,
-        listingTimestamp
+        antibotEndTimestamp
       ],
     });
     console.log("Contract verified successfully!");
