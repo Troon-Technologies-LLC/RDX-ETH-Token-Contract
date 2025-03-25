@@ -6,7 +6,7 @@ Simple script to bridge RDX tokens from Base to Ethereum using Axelar Interchain
 
 1. **Install Dependencies**
    ```bash
-   npm install ethers@6.x.x @axelar-network/axelarjs-sdk dotenv
+   npm install
    ```
 
 2. **Create .env File**
@@ -19,6 +19,9 @@ Simple script to bridge RDX tokens from Base to Ethereum using Axelar Interchain
    ```bash
    # For mainnet
    node scripts/bridge-mainnet.js
+   
+   # For testnet
+   node scripts/bridge-testnet.js
    ```
 
 ## Requirements
